@@ -1,0 +1,32 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "globalDependencies": [],
+  "globalEnv": [],
+  "globalPassThroughEnv": [],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "outputs": ["apps/*/dist/", "packages/*/dist/"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "inputs": ["**/.{ts,tsx,js,jsx}"],
+      "outputs": []
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"],
+      "inputs": ["/*.ts", "/.tsx"],
+      "outputs": []
+    },
+    "dev": {
+      "dependsOn": ["^dev"],
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

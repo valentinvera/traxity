@@ -1,0 +1,27 @@
+{
+  "name": "traxity",
+  "description": "Comprehensive SaaS platform for the fitness community that combines gym management, product marketplace, personalized trainer services and social networking features to share routines and progress. We connect trainers, students and fitness enthusiasts in a complete ecosystem to empower their health and wellness goals.",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write **/*.{ts,js} --cache --ignore-unknown",
+    "check-types": "turbo run check-types",
+    "build": "turbo run build",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@types/bun": "1.2.8",
+    "prettier": "3.5.3",
+    "prettier-plugin-organize-imports": "4.1.0",
+    "prettier-plugin-tailwindcss": "0.6.11",
+    "turbo": "2.5.0",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "bun": ">=1.2.5"
+  },
+  "packageManager": "bun@1.2.10",
+  "workspaces": ["apps/*", "packages/*"]
+}

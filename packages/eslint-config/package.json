@@ -1,0 +1,26 @@
+{
+  "name": "@traxity/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "module": "base.js",
+  "type": "module",
+  "exports": {
+    "./base": "./base.js",
+    "./react": "./react.js",
+    "./nest": "./nest.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.24.0",
+    "@typescript-eslint/eslint-plugin": "8.29.1",
+    "@typescript-eslint/parser": "8.29.1",
+    "eslint": "9.24.0",
+    "eslint-config-prettier": "10.1.2",
+    "eslint-import-resolver-typescript": "4.3.2",
+    "eslint-plugin-prettier": "5.2.6",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-react-refresh": "0.4.19",
+    "globals": "16.0.0",
+    "typescript-eslint": "8.29.1"
+  }
+}

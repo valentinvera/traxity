@@ -1,0 +1,7 @@
+{
+  "name": "@traxity/ts-config",
+  "version": "0.0.0",
+  "private": true,
+  "module": "base.json",
+  "type": "module"
+}
