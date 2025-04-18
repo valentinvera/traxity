@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  PROFESSOR
+  STUDENT
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum ProviderType {
+  EMAIL
+  GOOGLE
+  GITHUB
+  MICROSOFT
+  APPLE
+}
+
+enum NotificationType {
+  EMAIL
+  PUSH
+  SMS
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  TRIAL
+}
+
+model User {
+  id                   String        @id @default(uuid())
+  email                String        @unique
+  password             String?
+  name                 String
+  surname              String
+  displayName          String?       @unique
+  avatar               String?
+  bio                  String?       @db.Text
+  phoneNumber          String?
+  role                 Role          @default(USER)
+  isEmailVerified      Boolean       @default(false)
+  verificationToken    String?       @unique
+  resetPasswordToken   String?       @unique
+  resetPasswordExpires DateTime?
+  refreshToken         String?       @unique
+  lastLogin            DateTime?
+  lastLogout           DateTime?
+  status               AccountStatus @default(PENDING_VERIFICATION)
+  settings             Json?
+  preferredLanguage    String?       @default("es")
+  timezone             String?       @default("America/Argentina/Buenos_Aires")
+
+  providers          UserProvider[]
+  sessions           Session[]
+  notifications      Notification[]
+  subscription       Subscription?
+  courses            CourseEnrollment[]
+  teachingCourses    Course[]           @relation("CourseProfessor")
+  createdAssignments Assignment[]       @relation("AssignmentCreator")
+  submissions        Submission[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([email, status])
+  @@index([role])
+  @@map("users")
+}
+
+model UserProvider {
+  id           String       @id @default(uuid())
+  userId       String
+  providerType ProviderType
+  providerId   String
+  accessToken  String?      @db.Text
+  refreshToken String?      @db.Text
+  profile      Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, providerType])
+  @@index([providerType, providerId])
+  @@map("user_providers")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Notification {
+  id      String           @id @default(uuid())
+  userId  String
+  type    NotificationType
+  title   String
+  content String           @db.Text
+  isRead  Boolean          @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model Subscription {
+  id                String             @id @default(uuid())
+  userId            String             @unique
+  tier              SubscriptionTier   @default(FREE)
+  status            SubscriptionStatus @default(TRIAL)
+  startDate         DateTime           @default(now())
+  endDate           DateTime?
+  cancelAtPeriodEnd Boolean            @default(false)
+  paymentId         String?            @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+model Course {
+  id          String  @id @default(uuid())
+  title       String
+  description String  @db.Text
+  coverImage  String?
+  professorId String
+  isPublished Boolean @default(false)
+
+  professor   User               @relation("CourseProfessor", fields: [professorId], references: [id])
+  enrollments CourseEnrollment[]
+  assignments Assignment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([professorId])
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id          String    @id @default(uuid())
+  userId      String
+  courseId    String
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("course_enrollments")
+}
+
+model Assignment {
+  id          String    @id @default(uuid())
+  title       String
+  description String    @db.Text
+  courseId    String
+  creatorId   String
+  dueDate     DateTime?
+  maxScore    Float     @default(100)
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator     User         @relation("AssignmentCreator", fields: [creatorId], references: [id])
+  submissions Submission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+  @@map("assignments")
+}
+
+model Submission {
+  id           String  @id @default(uuid())
+  assignmentId String
+  userId       String
+  content      String  @db.Text
+  score        Float?
+  feedback     String? @db.Text
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  submittedAt DateTime  @default(now())
+  gradedAt    DateTime?
+
+  @@unique([assignmentId, userId])
+  @@map("submissions")
+}
+
+model AuditLog {
+  id        String  @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, action])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
